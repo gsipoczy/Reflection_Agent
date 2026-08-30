@@ -81,6 +81,32 @@ model = init_chat_model(
 
 ```
 
+### **Generation Prompt for Posts**
+
+We are using **`ChatPromptTemplate`** from LangChain to structure the prompt. The prompt has two main parts:
+
+1. **System Message**:  
+   This provides instructions to the assistant about its role and task.  
+   Here, the assistant is framed as a **professional LinkedIn content assistant** who is expected to generate the best possible LinkedIn post based on the user's input.  
+   It also specifies that if the user provides feedback or critique, the assistant should revise the post to improve clarity, tone, or engagement.
+
+2. **MessagesPlaceholder**:  
+   This is used to inject the actual content or message that the post will be based on.  
+   The placeholder will be populated with the user’s request at runtime.
+
+```
+generation_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a professional LinkedIn content assistant tasked with crafting engaging, insightful, and well-structured LinkedIn posts."
+            " Generate the best LinkedIn post possible for the user's request."
+            " If the user provides feedback or critique, respond with a refined version of your previous attempts, improving clarity, tone, or engagement as needed.",
+        ),
+        MessagesPlaceholder(variable_name="messages"),
+    ]
+)
+```
 
 ---
 
