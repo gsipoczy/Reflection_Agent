@@ -73,6 +73,14 @@ The following diagram illustrates the workflow of this system, showing the inter
 This step initializes a language model, which will be used to generate responses based on the prompts. This example uses an Anthropic model, so it requires an Anthropic API key in the 
 environment variable __ANTHROPIC_API_KEY__.
 
+```
+model_name = "claude-sonnet-4-6"
+model = init_chat_model(
+   model_name, 
+)
+
+```
+
 
 ---
 
