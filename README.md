@@ -160,6 +160,191 @@ In this setup:
 
 While this approach is flexible, it requires manual management of the state, including creating workflows and maintaining the message list.
 
+#### **LangGraph's `MessageGraph`**
+
+Instead of manually defining and managing the state, **LangGraph** offers a **prebuilt solution** called `MessageGraph`. It abstracts the complexity of state management, making it easy to create and work with conversational workflows.
+
+**Features of `MessageGraph`:**  
+1. **Predefined State Management**: Handles the underlying state representation for you, similar to what was manually defined above.  
+2. **Ease of Integration**: Provides a seamless way to interact with LLMs by managing conversation states automatically.  
+3. **Workflow Simplification**: Streamlines the process of building workflows with less boilerplate code.  
+
+#### **Initializing `MessageGraph`**
+
+To streamline workflow creation and state management, LangGraph provides a prebuilt solution called `MessageGraph`. This simplifies the process of setting up conversational workflows by handling the underlying structure automatically.
+
+```python
+graph = MessageGraph()
+```
+
+
+### **Defining the Generation and Reflection  Node**
+
+The `generation_node` function acts as the starting point in the Reflection Agent's workflow. It generates an initial output based on the current state of the conversation, which contains all previous messages (user inputs, AI responses, and system instructions). 
+
+- **Input**: The function accepts the `state`, which is a sequence of `BaseMessage` objects (i.e., `HumanMessage`, `AIMessage`, `SystemMessage`). These messages provide the context necessary for generating a meaningful response.
+
+- **Output**: The function uses the `generate_chain` to produce an output by invoking the chain with the `state` as input. The `invoke` function triggers the execution of the chain, where the `messages` in the state guide the chain's generation process. The output is generated based on the context provided by these messages, ensuring that the response is appropriate to the current stage of the conversation or task.
+
+```python
+def generation_node(state: Sequence[BaseMessage]) -> List[BaseMessage]:
+        generated_post = generate_chain.invoke({"messages": state})
+        return [AIMessage(content=generated_post.content)]
+```
+
+The `reflection_node` function plays a key role in improving the output generated in the `generation_node`. It critiques the original output and makes recommendations for refinement. The feedback mechanism helps enhance the final result, making it more in line with the desired outcome, whether that involves clarity, engagement, or tone adjustments.
+
+- **Input**: The function takes `messages`, which is a sequence of `BaseMessage` objects. This includes previous AI responses, user inputs, and system-level instructions. The messages are used to provide context to the reflection process, guiding the generation of a more refined output.
+  
+- **Output**: The function invokes `reflect_chain`, passing the `messages` as input to critique and improve the content. After receiving the refined output, it returns the result as a `HumanMessage` object.
+
+The critic must *read* the draft, not continue it. Swapping roles keeps the
+original request as-is and turns each draft into a user turn, so the
+conversation never ends on an assistant message (Claude 4.6+ rejects
+assistant-message prefill).
+
+```python
+def reflection_node(messages: Sequence[BaseMessage]) -> List[BaseMessage]:
+
+   role_swap = {"ai": HumanMessage, "human": AIMessage}
+   translated = [messages[0]] + [
+      role_swap[m.type](content=m.content) for m in messages[1:]
+   ]
+   res = reflect_chain.invoke({"messages": translated})
+   return [HumanMessage(content=res.content)]
+```
+
+### **Why `HumanMessage`?**
+
+The output is wrapped in a `HumanMessage` because the reflection process is a form of feedback or critique given to the **generation agent**, and the feedback is intended to be treated as if it is coming from the user. This is important for the iterative process where the AI generates content and then receives human-like feedback to improve the output. In the context of this workflow, we treat the feedback as if a human is guiding the reflection agent to enhance its output.
+
+- **HumanMessage** here is not used to represent user input directly but rather to provide feedback (as if from a human perspective). This feedback is passed back into the system, enabling the generation agent to revise its content. 
+- It effectively gives the reflection node the authority to "speak" to the generation node, but in the context of providing critique and recommendations for refinement.
+
+### **Adding the Generate Node to the Graph**
+
+Now we add the generation node to the graph using the `add_node` function. This function takes two parameters:  
+
+1. **Name**: A unique identifier for the node, in this case, `"generate"`.  
+2. **Function**: The function to be executed when this node is triggered, here `generation_node`.
+
+```python
+graph.add_node("generate", generation_node)
+```
+
+We can summarize the process with the image: the generation prompt chains to the LLM using the generate chain. The generate node invokes this chain, storing the LLM's output in a sequence (list) of messages. The Graph object is created in red. Finally, add_node represents this as a blue node in the graph.
+
+![image](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/eWlf-wNPOye4o_B0Ax-3mg/Generate.png)
+
+### **Adding the Reflect Node to the Graph**
+
+We now add the reflection node to the graph using the `add_node` function. This function takes two parameters:  
+
+1. **Name**: A unique identifier for the node, in this case, `"reflect"`.  
+2. **Function**: The function to be executed when this node is triggered, here `reflection_node`.  
+
+This step integrates the `"reflect"` node into the graph, linking it to the `reflection_node` function. This node is responsible for providing feedback and suggestions for improving the generated content, enabling the reflection phase of the agent.
+
+```python
+graph.add_node("reflect", reflection_node)
+```
+
+Similarly, we represent the creation of the reflect node with an image where the reflect node `reflect_chain.invoke({"messages": messages})` maps its input to the sequence of inputs to the LLM and returns new HumanMessages in a list format. The Graph object is represented in Red. The add_node method adds this to the graph object represented as a green node.
+![reflect.png](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/-nFI6IESRnfmlF2tgeWr3g/reflect.png)
+
+The method graph.add_edge("reflect", "generate") method creates a one-way connection, as the drawing showns with a single arrow from the reflect node in green  to the generate node in blue. It's a simple direct path that tells the workflow "after reflection is done, go back to generation". Think of it like connecting two points in one direction - when you reach the end of the reflect node, there's only one place to go: back to generate. 
+
+```python
+graph.add_edge("reflect", "generate")
+```
+
+!![Screenshot 2025-02-10 at 4.24.25 PM.png](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/Z5jtZS3hNxh4jJROKeUa5Q/Screenshot%202025-02-10%20at%204-24-25%E2%80%AFPM.png)
+
+### **Setting the Entry Point in the Graph**
+
+The `graph.set_entry_point(GENERATE)` specifies where the workflow begins in the agent's graph. By setting **`GENERATE`** as the entry point, the process starts with the generation node, which creates the initial response based on the provided state.
+
+```python
+graph.set_entry_point("generate")
+```
+
+We  can use the following image to clarify the process the entry point as a square node in the graph, distinguished by a red edge.
+![Screenshot 2025-02-10 at 4.24.36 PM.png](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/addhElS0gs8pFgBRc_0gCw/Screenshot%202025-02-10%20at%204-24-36%E2%80%AFPM.png)
+
+### **Adding a Router Node for Decision Making**
+
+The router node in the graph is responsible for determining whether the workflow should proceed to the reflection phase or terminate. This decision can be made in two ways:  
+
+1. **Predefined Logic**:  
+   A simple condition is used to check the number of messages in the state. If the number of messages exceeds 6 (`len(state) > 6`), the workflow ends. Otherwise, it continues to the reflection phase.  
+
+2. **LLM-Based Logic**:  
+   Instead of relying on predefined logic, we can integrate an LLM to evaluate the context of the messages and decide whether further reflection is necessary.  
+
+For now, we will implement the predefined logic of checking the message count. Later, we will enhance this functionality by incorporating an LLM to decide dynamically whether to proceed to the reflection phase or end the workflow.
+
+```python
+def should_continue(state: List[BaseMessage]):
+   print(state)
+   print(len(state))
+   print("----------------------------------------------------------------------")
+   if len(state) > 6:
+      return END
+   return "reflect"
+```
+
+Since the LLM must decide whether to continue or end the process, we use the `add_conditional_edges` method to handle two possible paths: if the maximum iterations have not been reached, continue by sending messages from generate to reflect shown by the edge between the green and blue node; if the maximum is met, go to the end node (represented by a square).
+
+```python
+graph.add_conditional_edges("generate", should_continue)
+```
+
+![add_cond_node.png(1)](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/cVhRRFclksKny2JQUAcTiA/add-cond-node.png)
+
+### **Compiling the Workflow**
+
+Now we compile the workflow using `graph.compile()`. This step ensures that all nodes, edges, and conditional logic defined in the graph are connected and ready for execution.
+
+```python
+workflow = graph.compile()
+```
+
+### **Defining Inputs for the Workflow**
+
+In this example, we define the initial user input as a `HumanMessage`. This message contains a request to improve a post related to LangChain's Tool Calling feature. The content provides the context for the workflow, which will process it and generate a refined output.
+
+```python
+inputs = HumanMessage(content="""Write a linkedin post on getting a software developer job at IBM under 160 characters""")
+```
+
+### **Executing the Workflow**
+
+Once the input has been defined, the workflow is executed using the `graph.invoke()` method. This processes the `inputs` through the workflow graph, starting from the entry point, and generates a response.
+
+```python
+response = workflow.invoke(inputs)
+print(response[-1].content)
+```
+
+- response[1].content: the first generated LinkedIn without any critique.
+- response[2].content: the first critique for this generated post.
+
+This table tracks the state transitions in a reflection agent's workflow. Each row represents a step in the process, showing how the state evolves from the initial user input through multiple iterations of generation and reflection. The table captures the iteration number, message type (Human/AI/System), current state, active node (Input/Generate/Reflect), and where the workflow goes next. After 3 iterations, reaching 6 total state changes, the workflow terminates at END.
+
+| Iteration | Type | State | Node | Next Action |
+|-----------|------|-------|------|-------------|
+| 1 | Human | Initial request | Input | Generate |
+| 1 | AI | Generated content | Generate | Reflect |
+| 1 | System | Reflection feedback | Reflect | Generate |
+| 2 | AI | Revised content | Generate | Reflect |
+| 2 | System | Refinement feedback | Reflect | Generate |
+| 3 | AI | Final content | Generate | END |
+
+It is also possible to display the workflow with
+
+```python
+display(Image(workflow.get_graph().draw_png()))
+```
 
 
 ---
