@@ -73,7 +73,7 @@ The following diagram illustrates the workflow of this system, showing the inter
 This step initializes a language model, which will be used to generate responses based on the prompts. This example uses an Anthropic model, so it requires an Anthropic API key in the 
 environment variable __ANTHROPIC_API_KEY__.
 
-```
+```python
 model_name = "claude-sonnet-4-6"
 model = init_chat_model(
    model_name, 
@@ -94,7 +94,7 @@ We are using **`ChatPromptTemplate`** from LangChain to structure the prompt. Th
    This is used to inject the actual content or message that the post will be based on.  
    The placeholder will be populated with the user’s request at runtime.
 
-```
+```python
 generation_prompt = ChatPromptTemplate.from_messages(
     [
         (
@@ -125,7 +125,7 @@ By using the pipe operator (`|`), we are chaining these components together so t
 
 Similarly create a reflection chain.
 
-```
+```python
 generate_chain = prompts.generation_prompt | llm
 
 reflect_chain = reflection_prompt | llm
