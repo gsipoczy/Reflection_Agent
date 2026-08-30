@@ -1,6 +1,13 @@
-import mods.llm as llm
-import mods.prompts as prompts
+from langchain_core.messages import HumanMessage
 
-model = llm.get_model()
-generation_prompt = prompts.generation_prompt
+import mods.workflow as wf
+
+workflow = wf.get_workflow()
+
+inputs = HumanMessage(content="""Write a linkedin post on getting a software developer job at IBM under 160 characters""")
+
+response = workflow.invoke(inputs)
+
+print(response[-1].content)
+
 

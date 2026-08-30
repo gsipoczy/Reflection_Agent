@@ -106,7 +106,61 @@ generation_prompt = ChatPromptTemplate.from_messages(
         MessagesPlaceholder(variable_name="messages"),
     ]
 )
+
+reflection_prompt = ChatPromptTemplate.from_messages([
+   ...
+])
 ```
+
+### **Creating the Chain for LinkedIn Post Generation**
+
+In this step, we are combining the **`generation_prompt`** with a language model (LLM) to form a complete chain that will allow the system to generate LinkedIn posts based on user input.
+
+The **`generate_chain`** links the **`generation_prompt`** with the **LLM** (Large Language Model), enabling the system to generate a professional LinkedIn post after processing the user's input through the prompt.
+
+- **`generation_prompt`**: This is the template that guides the model on how to generate the LinkedIn post, including the system message and the placeholder for the user's input.
+- **`llm`**: This is the language model that will take the prompt and produce the post based on the input provided.
+
+By using the pipe operator (`|`), we are chaining these components together so that the prompt flows seamlessly into the language model and the model generates the final LinkedIn post.
+
+Similarly create a reflection chain.
+
+```
+generate_chain = prompts.generation_prompt | llm
+
+reflect_chain = reflection_prompt | llm
+```
+
+### **Defining the Agent State for Reflection Agent**
+
+When building a conversational workflow from scratch, the **state** represents the evolving context of the conversation or task. It tracks the interactions between the user and the AI, growing dynamically as new messages are added. 
+
+If we were to define the state manually, it would look like this:
+
+---
+
+#### **Manual State Definition**
+
+Using Python's `TypedDict`, we can define a state that holds a list of messages:
+
+```python
+from typing import List, Annotated, TypedDict
+from langchain.schema import HumanMessage, AIMessage, SystemMessage
+
+# Define State with TypedDict
+class AgentState(TypedDict):
+    messages: Annotated[List[HumanMessage | AIMessage | SystemMessage], "add_messages"]
+```
+
+In this setup:  
+- **`HumanMessage`**: Represents user inputs or prompts.  
+- **`AIMessage`**: Represents AI-generated responses.  
+- **`SystemMessage`**: Represents system-level instructions, such as refinement feedback or evaluation criteria.  
+- **`add_messages`**: Ensures new messages are appended to the list, preserving the context needed for iterative interactions.
+
+While this approach is flexible, it requires manual management of the state, including creating workflows and maintaining the message list.
+
+
 
 ---
 
