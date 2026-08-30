@@ -1,0 +1,30 @@
+
+# Big files
+**/*.jpg
+**/*.csv
+**/*.db
+
+# Secret things
+**/.env
+
+# Python big things
+**/__python__/
+**/env/
+
+# VSCode
+**/.vscode
+
+# Rust
+**/target/
+**/Cargo.lock
+
+
+# Keras/TensorFlow
+**/*.h5
+**/*.keras
+**/*.hdf5
+**/checkpoint/
+**/*.ckpt
+**/*.weights
+**/logs/
+**/.ipynb_checkpoints/

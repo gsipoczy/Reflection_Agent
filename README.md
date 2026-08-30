@@ -51,3 +51,14 @@ The AI reviews the post and asks:
 *"I'm thrilled to share that I've been promoted to Engineering Manager at [Company]! Grateful for the mentorship, team collaboration, and opportunities that led to this moment. Looking forward to leading new initiatives and continuing to grow with this incredible team. #Leadership #CareerGrowth #EngineeringManager"*
 
 ---
+
+
+
+
+&copy; IBM Skills Network
+
+<p style="text-align:center">
+    <a href="https://skills.network" target="_blank">
+    <img src="https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/assets/logos/SN_web_lightmode.png" width="200" alt="Skills Network Logo"  />
+    </a>
+</p>
