@@ -52,7 +52,17 @@ The AI reviews the post and asks:
 
 ---
 
+### **Building an Optimized LinkedIn Post Generator with a Reflection Agent**
 
+In this process, we aim to enhance the quality of AI-generated posts using a Reflection Agent. The idea is to allow the AI to generate a post and then critique its own output, refining the content iteratively based on feedback. This approach helps improve the engagement, relevance, and tone, ensuring a better final result.
+
+We will be building a system that includes a generation phase where the post is generated, followed by a reflection phase where the AI reviews and refines the output. This cycle ensures that the AI produces higher-quality content in the end.
+
+The following diagram illustrates the workflow of this system, showing the interaction between the generation and reflection nodes.
+
+<div style="text-align: center;">
+  <img src="https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/Cbuc3z8N1_Ew2ESw199Slw/Workflow.png" alt="Workflow" style="width: 40%; height: 500px;">
+</div>
 
 
 &copy; IBM Skills Network
