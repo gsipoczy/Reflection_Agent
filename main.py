@@ -1,6 +1,6 @@
-from mods.llm import get_model
+import mods.llm as llm
+import mods.prompts as prompts
 
-model = get_model()
-if not model: 
-    exit()
+model = llm.get_model()
+generation_prompt = prompts.generation_prompt
 

@@ -64,6 +64,17 @@ The following diagram illustrates the workflow of this system, showing the inter
   <img src="https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/Cbuc3z8N1_Ew2ESw199Slw/Workflow.png" alt="Workflow" style="width: 40%; height: 500px;">
 </div>
 
+---
+
+# Step-by-step
+
+### **Instantiating the Language Model**
+
+This step initializes a language model, which will be used to generate responses based on the prompts. This example uses an Anthropic model, so it requires an Anthropic API key in the 
+environment variable __ANTHROPIC_API_KEY__.
+
+
+---
 
 &copy; IBM Skills Network
 
